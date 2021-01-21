@@ -1,0 +1,28 @@
+# const { gql } = require('apollo-server-express');
+
+# module.exports = gql`
+type Channel {
+    id: ID!
+    name: String!
+    messages: [Message]!
+    private: Boolean!
+    # team: [Team]!
+    users: [User]!
+}
+
+type ChannelMember {
+    id: ID!
+    channelId: ID!
+    userId: ID!
+}
+
+type Query {
+    getChannel(id: ID!): Channel!
+    getChannels: [Channel]!
+}
+
+type Mutation {
+    createChannel(name: String!, private: Boolean): Channel!
+    deleteChannel(id: ID!): Boolean
+    addChannelMember(id: ID!, userId: ID!): ChannelMember!
+}

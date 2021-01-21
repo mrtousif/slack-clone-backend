@@ -1,0 +1,75 @@
+{
+  "name": "slack-clone",
+  "description": "my stellar project",
+  "version": "1.0.0",
+  "author": "Tousif <tousif101@outlook.com> ()",
+  "bugs": {
+    "url": "https://github.com/CoderTousif/slack-clone/issues",
+    "email": "tousif101@outlook.com"
+  },
+  "contributors": [
+    "Tousif <tousif101@outlook.com> ()"
+  ],
+  "dependencies": {
+    "apollo-server-express": "^2.19.2",
+    "bcrypt": "^5.0.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "graphql": "^15.4.0",
+    "graphql-tools": "^7.0.2",
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^8.5.1",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^6.3.5",
+    "slugify": "^1.4.6"
+  },
+  "devDependencies": {
+    "@babel/node": "^7.12.10",
+    "@commitlint/cli": "latest",
+    "@commitlint/config-conventional": "latest",
+    "ava": "latest",
+    "babel-preset-env": "^1.7.0",
+    "codecov": "latest",
+    "cross-env": "latest",
+    "eslint": "latest",
+    "eslint-config-xo-lass": "latest",
+    "fixpack": "latest",
+    "husky": "latest",
+    "lint-staged": "latest",
+    "nyc": "latest",
+    "remark-cli": "latest",
+    "remark-preset-github": "latest",
+    "xo": "latest"
+  },
+  "engines": {
+    "node": ">= 14"
+  },
+  "homepage": "https://github.com/CoderTousif/slack-clone",
+  "keywords": [
+    "lass",
+    "slack-clone"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CoderTousif/slack-clone"
+  },
+  "scripts": {
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+    "dev": "nodemon  index.js",
+    "lint": "yarn run lint:js && yarn run lint:md",
+    "lint:js": "xo",
+    "lint:md": "remark . -qfo",
+    "pretest": "yarn run lint",
+    "test": "cross-env NODE_ENV=test ava",
+    "test-coverage": "cross-env NODE_ENV=test nyc yarn run test"
+  },
+  "xo": {
+    "prettier": true,
+    "space": true,
+    "extends": [
+      "xo-lass"
+    ]
+  }
+}

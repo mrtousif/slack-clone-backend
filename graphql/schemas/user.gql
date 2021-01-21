@@ -1,0 +1,25 @@
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    photo: String
+    createdAt: String!
+    token: String!
+    teams: [Team]
+}
+
+type Query {
+    getUser(id: ID!): User!
+    # getAllUsers(): [User]
+}
+
+type Mutation {
+    signup(
+        name: String!
+        email: String!
+        password: String!
+        confirmPassword: String!
+    ): User!
+
+    login(email: String!, password: String!): User!
+}
