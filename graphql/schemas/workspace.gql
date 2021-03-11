@@ -1,0 +1,43 @@
+# const { gql } = require('apollo-server-express');
+
+# module.exports = gql`
+type Workspace {
+    id: ID!
+    name: String!
+    slug: String!
+    createAt: DateTime
+    owner: ID!
+    admin: Boolean
+    directMessageMembers: [User]!
+    channels: [Channel!]!
+}
+
+type Member {
+    id: ID!
+    name: String!
+    photo: String!
+}
+
+type CreateWorkspaceResponse {
+    id: ID!
+    name: String!
+    slug: String!
+    owner: ID!
+    createAt: DateTime!
+    channels: [Channel!]!
+}
+
+type VoidResponse {
+    ok: Boolean!
+}
+
+type Query {
+    getWorkspace(workspaceId: ID!): Workspace!
+    getWorkspacesByUser: [Workspace]!
+    getWorkspaceMembers(workspaceId: ID!): [Member]!
+}
+
+type Mutation {
+    createWorkspace(name: String!): CreateWorkspaceResponse!
+    addWorkspaceMembers(workspaceId: ID!, emails: [String!]!): VoidResponse!
+}

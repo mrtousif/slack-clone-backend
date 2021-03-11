@@ -1,7 +1,7 @@
-// ./graphql/typeDefs.js
 const path = require('path');
 const { loadFilesSync } = require('@graphql-tools/load-files');
 const { mergeTypeDefs, mergeResolvers } = require('@graphql-tools/merge');
+// const { resolvers } = require('graphql-scalars');
 
 const schemaArray = loadFilesSync(path.join(__dirname, './schemas'));
 const resolverArray = loadFilesSync(path.join(__dirname, './resolvers'));

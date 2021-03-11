@@ -1,13 +1,13 @@
-# const { gql } = require('apollo-server-express');
-
-# module.exports = gql`
 type Channel {
     id: ID!
     name: String!
+    description: String
+    createAt: DateTime
     messages: [Message]!
     private: Boolean!
-    # team: [Team]!
-    users: [User]!
+    workspaceId: ID!
+    members: [User]!
+    owner: ID!
 }
 
 type ChannelMember {
@@ -17,12 +17,24 @@ type ChannelMember {
 }
 
 type Query {
-    getChannel(id: ID!): Channel!
-    getChannels: [Channel]!
+    getChannel(channelId: ID!): Channel!
+    getChannels(workspaceId: ID!): [Channel]!
+    getMembersToAddToTheChannel(
+        workspaceId: ID!
+        channelId: ID!
+    ): [ChannelMember]!
 }
 
 type Mutation {
-    createChannel(name: String!, private: Boolean): Channel!
+    createChannel(
+        name: String!
+        workspaceId: ID!
+        description: String
+        private: Boolean = false
+    ): Channel!
+    addChannelMembers(channelId: ID!, userIds: [ID]!): Boolean
     deleteChannel(id: ID!): Boolean
     addChannelMember(id: ID!, userId: ID!): ChannelMember!
 }
+
+# getChannelMembers(channelId: ID!): [User]!

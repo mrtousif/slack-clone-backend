@@ -1,0 +1,26 @@
+type DirectMessage {
+    id: ID!
+    text: String!
+    receiverId: ID!
+    senderId: ID!
+    receiver: User!
+    user: User!
+    createdAt: DateTime!
+}
+
+type Query {
+    getDirectMessages(receiverId: ID!, workspaceId: ID!): [DirectMessage!]!
+}
+
+type Mutation {
+    createDirectMessage(
+        workspaceId: ID!
+        receiverId: ID!
+        text: String!
+        file: Upload
+    ): DirectMessage!
+}
+
+type Subscription {
+    newDirectMessage(receiverId: ID!, workspaceId: ID!): DirectMessage!
+}

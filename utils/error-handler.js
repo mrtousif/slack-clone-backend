@@ -1,4 +1,4 @@
-const AppError = require('../utils/AppError');
+const AppError = require('./AppError');
 
 const handleCastErrorDB = (error) => {
     const message = `Invalid ${error.path}: ${error.value}`;
@@ -29,11 +29,11 @@ const handleTokenExpiredError = () => {
     return new AppError('Expired token. Please log in again', 401);
 };
 
-const sendErrorDev = (error, request, res) => {
+const sendErrorDev = (error, request, response) => {
     // a) if request url starts with /graphql
 
     if (request.originalUrl.startsWith('/graphql')) {
-        return res.status(error.statusCode).json({
+        return response.status(error.statusCode).json({
             status: error.status,
             message: error.message,
             error,
@@ -42,13 +42,13 @@ const sendErrorDev = (error, request, res) => {
     }
 
     // b) render error page
-    res.status(error.statusCode).render('error', {
+    response.status(error.statusCode).render('error', {
         title: 'Something went wrong',
         message: error.message
     });
 };
 
-const sendErrorProd = (error, request, res) => {
+const sendErrorProd = (error, request, response) => {
     // log the error to the console
     console.error('PRODUCTION ERROR:', error);
     console.log(
@@ -59,7 +59,7 @@ const sendErrorProd = (error, request, res) => {
     if (request.originalUrl.startsWith('/graphql')) {
         // operational, trusted errors to the client
         if (error.isOperational) {
-            return res.status(error.statusCode).json({
+            return response.status(error.statusCode).json({
                 status: error.status,
                 message: error.message
             });
@@ -67,7 +67,7 @@ const sendErrorProd = (error, request, res) => {
 
         // programming errors or unknown errors, do not leak
         // send generic error to the client
-        return res.status(500).json({
+        return response.status(500).json({
             status: 'error',
             message: 'Something went wrong'
         });
@@ -76,7 +76,7 @@ const sendErrorProd = (error, request, res) => {
     // b) request url does not starts with /graphql
     // if error is operational, render the message to the client
     if (error.isOperational) {
-        return res.status(error.statusCode).render('error', {
+        return response.status(error.statusCode).render('error', {
             title: 'Something went wrong',
             message: error.message
         });
@@ -84,15 +84,15 @@ const sendErrorProd = (error, request, res) => {
 
     // error is not operational
     // render error page with generic message
-    res.status(error.statusCode).render('error', {
+    response.status(error.statusCode).render('error', {
         title: 'Something went wrong',
         message: 'Please try again later'
     });
 };
 
-// global error handler using express middleware
+// global error handler using expresponses middleware
 // called from catchAsync()
-module.exports = (error_, request, res, next) => {
+module.exports = (error_, request, response, _next) => {
     // console.log(err.stack);
     error_.statusCode = error_.statusCode || 500;
     error_.status = error_.status || 'error';
@@ -115,9 +115,9 @@ module.exports = (error_, request, res, next) => {
         }
 
         // production error
-        sendErrorProd(error, request, res);
+        sendErrorProd(error, request, response);
     } else {
         // errors for development
-        sendErrorDev(error_, request, res);
+        sendErrorDev(error_, request, response);
     }
 };

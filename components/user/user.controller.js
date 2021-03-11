@@ -1,9 +1,9 @@
 const { promisify } = require('util'); // promisify() makes a synchronous function asynchronous
-const crypto = require('crypto');
+// const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const {
     models: { User }
-} = require('../models/index');
+} = require('../index');
 // const Profile = require("../profile/profile.model");
 // const backblaze = require("./backblaze");
 
@@ -16,12 +16,25 @@ const {
 // const Email = require("../utils/Email");
 
 const signToken = (user) => {
-    const { id, name, email, photo } = user;
+    const { id, name, email, photo, role } = user;
 
-    const token = jwt.sign({ id, name, email, photo }, process.env.JWT_SECRET, {
-        algorithm: 'HS256',
-        expiresIn: process.env.JWT_EXPIRES_IN // validity of the token
-    });
+    const token = jwt.sign(
+        { id, name, email, photo, role },
+        process.env.JWT_SECRET,
+        {
+            algorithm: 'HS256',
+            expiresIn: process.env.JWT_EXPIRES_IN // validity of the token
+        }
+    );
+
+    // const refreshToken = jwt.sign(
+    //     { id, name, email, photo },
+    //     process.env.JWT_SECRET,
+    //     {
+    //         algorithm: 'HS256',
+    //         expiresIn: process.env.JWT_EXPIRES_IN // validity of the token
+    //     }
+    // );
 
     return token;
 };
@@ -48,7 +61,7 @@ const signAndSendToken = (user) => {
     user.passwordChangedAt = undefined;
     // const photo = user.photo;
     user.token = token;
-
+    // user.refreshToken = refreshToken;
     // user.photo = `https://f000.backblazeb2.com/file/user-profile-pics/${photo}`;
 
     return user;
@@ -82,10 +95,6 @@ exports.signup = async ({ name, email, password, confirmPassword }) => {
         password
     });
 
-    // await Profile.create({
-    //     user: newUser._id,
-    // });
-
     // send email
     // const url = `${req.protocol}://${req.get("host")}/me`;
 
@@ -116,94 +125,76 @@ exports.login = async ({ email, password }) => {
 };
 
 // Stage 2 authentication --- Access to logged in user
-exports.protect = async ({ req }) => {
-    if (!req) throw new Error('req is not defined');
-    // Get token and check if it exists
-    let token;
-    if (req.cookies && req.cookies.token) {
-        token = req.cookies.token;
-    } else if (
-        req.headers.authorization &&
-        req.headers.authorization.startsWith('Bearer')
-    ) {
-        // extract the token part from the string
-        token = req.headers.authorization.split(' ')[1];
-        // remove quotes if any
-        token = token.replace(/^"(.*)"$/, '$1');
-    }
-
-    // check token if it exists
-    if (!token || token === 'undefined') {
+exports.protect = async (token) => {
+    // remove quotes if any
+    // token = token.replace(/^"(.*)"$/, '$1');
+    if (!token || !token.startsWith('Bearer')) {
         throw new AuthenticationError('You need to login to get access');
     }
 
-    // console.log(token);
+    // extract the token part from the string // remove quotes if any
+    token = token.split(' ')[1].replace(/^"(.*)"$/, '$1');
+    // refreshToken = refreshToken.split(' ')[1].replace(/^"(.*)"$/, '$1');
+
     // verify token and extract data
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-    // console.log(decoded);
-    // decoded{ id: '---', iat: ---, exp: --- }
+    const decodedToken = await promisify(jwt.verify)(
+        token,
+        process.env.JWT_SECRET
+    );
+
+    // const decodedRefreshToken = await promisify(jwt.verify)(
+    //     refreshToken,
+    //     process.env.JWT_SECRET
+    // );
+
     // check if user exists
-    const user = await User.findByPk(decoded.id);
+    const user = await User.findByPk(decodedToken.id);
     if (!user) {
         throw new AuthenticationError('Please login first');
     }
 
     // check if user has changed password after the token was issued
-    if (user.changedPasswordAfter(decoded.iat)) {
+    if (user.changedPasswordAfter(decodedToken.iat)) {
         throw new AuthenticationError(
             'Password changed recently. Please login'
         );
     }
 
-    // load user data to the request object
-    req.user = user;
-
-    // grant access to the protected route
     return user;
 };
 
-exports.isLoggedIn = async ({ req }) => {
-    try {
-        if (!req) throw new Error('req is not defined');
-        //! req.cookies.token ||
-        let token;
-        if (
-            req.headers.authorization &&
-            req.headers.authorization.startsWith('Bearer')
-        ) {
-            // extract the token part from the string
-            // console.log(req.headers.authorization);
-            token = req.headers.authorization.split(' ')[1];
-            // remove quotes if any
-            token = token.replace(/^"(.*)"$/, '$1');
-            // console.log(token);
-            // const token = req.cookies.token;
-            // verify token and extract data
-            const decoded = await promisify(jwt.verify)(
-                token,
-                process.env.JWT_SECRET
-            );
-            // console.log(decoded)
-            // check if user exists
-            const user = await User.findByPk(decoded.id);
-            if (!user) {
-                return;
-            }
+exports.isAuthenticated = async (token) => {
+    let user = null;
+    // req.headers.authorization &&
+    // req.headers.authorization.startsWith('Bearer')
+    if (token && token.startsWith('Bearer')) {
+        // token = req.headers.authorization.split(' ')[1];
+        token = token.split(' ')[1];
+        if (!token || token.length < 10)
+            throw new ValidationError('Invalid token');
 
-            // console.log(user);
-            // check if user has changed password after the token was issued
-            if (user.changedPasswordAfter(decoded.iat)) {
-                return;
-            }
-
-            // user is logged in
-            // make it accessible to the template
-            // res.locals.user = user;
-            return user;
+        // remove quotes if any
+        token = token.replace(/^"(.*)"$/, '$1');
+        // console.log(token);
+        // verify token and extract data
+        const decoded = await promisify(jwt.verify)(
+            token,
+            process.env.JWT_SECRET
+        );
+        // console.log(decoded)
+        // check if user exists
+        user = await User.findByPk(decoded.id);
+        if (!user) {
+            return;
         }
-    } catch (err) {
-        return err;
+
+        // check if user has changed password after the token was issued
+        if (user.changedPasswordAfter(decoded.iat)) {
+            return;
+        }
     }
+
+    return user;
 };
 
 // exports.logout = (request, res) => {

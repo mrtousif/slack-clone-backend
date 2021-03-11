@@ -6,7 +6,6 @@ class ChannelMember extends Model {}
 module.exports = (sequelize) => {
     ChannelMember.init(
         {
-            // Model attributes are defined here
             id: {
                 type: DataTypes.UUID,
                 primaryKey: true,
@@ -36,11 +35,17 @@ module.exports = (sequelize) => {
                     // - `Deferrable.INITIALLY_DEFERRED` - Defer all foreign key constraint check to the end of a transaction
                     // - `Deferrable.NOT` - Don't defer the checks at all (default) - This won't allow you to dynamically change the rule in a transaction
                 }
+            },
+            admin: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: false
             }
         },
         {
             sequelize,
-            modelName: 'channelMember'
+            modelName: 'channelMember',
+            updatedAt: false,
+            indexes: [{ fields: ['channelId', 'userId'], unique: true }]
         }
     );
 
@@ -54,21 +59,16 @@ module.exports = (sequelize) => {
     //     });
     // });
 
-    // Channel.associate = (models) => {
+    // ChannelMember.associate = (models) => {
     //     // 1:M
-    //     Channel.belongsTo(models.Team, {
-    //         foreignKey: 'teamId'
+    //     ChannelMember.belongsTo(models.Channel, {
+    //         foreignKey: 'channelId'
     //         // { name: 'teamId', field: 'team_id' }
     //     });
 
     //     // N:M
-    //     Channel.belongsToMany(models.User, {
-    //         through: 'channelMember',
-    //         foreignKey: 'channelId'
-    //         // {
-    //         //     name: 'channelId',
-    //         //     field: 'channel_id'
-    //         // }
+    //     ChannelMember.belongsTo(models.User, {
+    //         foreignKey: 'userId'
     //     });
     // };
 

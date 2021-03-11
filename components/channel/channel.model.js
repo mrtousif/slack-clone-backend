@@ -12,10 +12,15 @@ module.exports = (sequelize) => {
                 primaryKey: true,
                 defaultValue: Sequelize.UUIDV4
             },
+            workspaceId: {
+                type: DataTypes.UUID,
+                allowNull: false
+            },
             name: {
                 type: DataTypes.STRING,
-                unique: true
+                allowNull: false
             },
+            description: DataTypes.STRING,
             private: {
                 type: DataTypes.BOOLEAN,
                 defaultValue: false
@@ -39,11 +44,13 @@ module.exports = (sequelize) => {
         },
         {
             sequelize,
-            modelName: 'channel'
+            modelName: 'channel',
+            updatedAt: false,
+            indexes: [{ fields: ['workspaceId', 'name'], unique: true }]
         }
     );
 
-    Channel.beforeValidate((user, options) => {
+    Channel.beforeValidate((user, _options) => {
         user.name = slugify(user.name, {
             replacement: '-', // replace spaces with replacement character, defaults to `-`
             remove: undefined, // remove characters that match regex, defaults to `undefined`
@@ -53,23 +60,23 @@ module.exports = (sequelize) => {
         });
     });
 
-    // Channel.associate = (models) => {
-    //     // 1:M
-    //     Channel.belongsTo(models.Team, {
-    //         foreignKey: 'teamId'
-    //         // { name: 'teamId', field: 'team_id' }
-    //     });
+    Channel.associate = (models) => {
+        // 1:M
+        Channel.belongsTo(models.Workspace, {
+            foreignKey: 'workspaceId'
+            // { name: 'teamId', field: 'team_id' }
+        });
 
-    //     // N:M
-    //     Channel.belongsToMany(models.User, {
-    //         through: 'channelMember',
-    //         foreignKey: 'channelId'
-    //         // {
-    //         //     name: 'channelId',
-    //         //     field: 'channel_id'
-    //         // }
-    //     });
-    // };
+        // N:M
+        Channel.belongsToMany(models.User, {
+            through: models.ChannelMember,
+            foreignKey: 'channelId'
+            // {
+            //     name: 'channelId',
+            //     field: 'channel_id'
+            // }
+        });
+    };
 
     return Channel;
 };

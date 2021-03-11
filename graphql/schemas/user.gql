@@ -3,14 +3,15 @@ type User {
     name: String!
     email: String!
     photo: String
-    createdAt: String!
     token: String!
-    teams: [Team]
+    createdAt: DateTime!
+    refreshToken: String
 }
 
 type Query {
-    getUser(id: ID!): User!
-    # getAllUsers(): [User]
+    getUser(userId: ID!): User!
+    getUserWorkspaces: [Workspace]!
+    # getAllUsers: [User]
 }
 
 type Mutation {

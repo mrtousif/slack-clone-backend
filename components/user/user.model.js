@@ -17,7 +17,7 @@ class User extends Model {
         // candidatePass is not hashed but userPass is hashed
         // bcrypt takes care of that
         // returns true or false
-        return await bcrypt.compare(candidatePass, userPass);
+        return bcrypt.compare(candidatePass, userPass);
     }
 
     changedPasswordAfter(JWTTimestamp) {
@@ -65,6 +65,10 @@ module.exports = (sequelize) => {
                 primaryKey: true,
                 defaultValue: Sequelize.UUIDV4
             },
+            name: {
+                type: DataTypes.STRING,
+                allowNull: false
+            },
             // username: {
             //     type: DataTypes.STRING,
             //     unique: true,
@@ -72,10 +76,6 @@ module.exports = (sequelize) => {
             // only use letters, numbers and underscores.
             // is: /^\w{2,}$/
             // },
-            name: {
-                type: DataTypes.STRING,
-                allowNull: false
-            },
             email: {
                 type: DataTypes.STRING,
                 unique: true,
@@ -98,10 +98,6 @@ module.exports = (sequelize) => {
                 type: DataTypes.STRING,
                 defaultValue: 'default'
             },
-            role: {
-                type: DataTypes.STRING,
-                defaultValue: 'user'
-            },
             passwordChangedAt: DataTypes.DATE,
             passwordResetToken: DataTypes.STRING,
             resetTokenExpiresAt: DataTypes.DATE
@@ -115,21 +111,27 @@ module.exports = (sequelize) => {
     );
 
     User.associate = (models) => {
-        User.belongsToMany(models.Team, {
-            through: 'member',
+        User.belongsToMany(models.Workspace, {
+            through: models.WorkspaceMember,
             foreignKey: 'userId'
             // { name: 'userId', field: 'user_id' }
         });
 
         // N:M
         User.belongsToMany(models.Channel, {
-            through: 'channelMember',
+            through: models.ChannelMember,
+            foreignKey: 'userId'
+            // {name: 'userId',field: 'user_id'}
+        });
+
+        User.belongsToMany(models.Channel, {
+            through: models.PrivateChannelMember,
             foreignKey: 'userId'
             // {name: 'userId',field: 'user_id'}
         });
     };
 
-    User.beforeCreate(async (user, options) => {
+    User.beforeCreate(async (user, _options) => {
         // runs before create
         // user.passwordChangedAt = Date.now();
         // delete password confirm field
@@ -144,14 +146,16 @@ module.exports = (sequelize) => {
         }
     });
 
-    User.beforeSave(async (user, options) => {
+    User.beforeSave(async (user, _options) => {
         // runs before create or update
-        // console.log({ email: user.email });
+
         // hash the password with the cost of 12 --- Strong Encryption
         if (user.changed('password')) {
             user.password = await bcrypt.hash(user.password, 12);
         }
     });
+
+    // User.beforeFind((user, options) => {});
 
     return User;
 };

@@ -1,18 +1,27 @@
 # const { gql } = require('apollo-server-express');
+scalar DateTime
+scalar Upload
 
 type Message {
     id: ID!
     text: String!
     user: User!
-    channel: Channel!
+    channelId: ID!
+    createdAt: DateTime!
+    url: String
+    fileName: String
+    fileType: String
 }
 
 type Query {
     hi: String!
+    getMessages(channelId: ID!): [Message!]!
 }
 
 type Mutation {
-    createMessage(text: String!): Message!
+    createMessage(channelId: ID!, text: String!, file: Upload): Message!
+}
 
-    deleteMessage(id: ID!): Message
+type Subscription {
+    newMessage(channelId: ID!): Message!
 }
